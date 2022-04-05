@@ -10,12 +10,14 @@ const PORT = process.env.SERVER_PORT || 3000;
 (async () => {
   await MongoHandler.initializeConnection();
 
+  app.use(express.json());
+  
   // Just to know if server is running
   app.get("/", (req: Request, res: Response) => {
     res.send("Welcome to ideal node architecture ts app");
   });
 
-  app.use("/v1.0", v1Routes());
+  app.use("/api/v1.0", v1Routes());
 
   // app.use for error handling 
   // app.use for not found

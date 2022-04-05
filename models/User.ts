@@ -1,7 +1,5 @@
-import { MongoHandler } from "../startup/mongo_handler";
 import { User } from "../types/User";
-
-const mongoose = MongoHandler.connection;
+import mongoose from "mongoose";
 import Joi from 'joi';
 import jwt from 'jsonwebtoken';
 
@@ -52,4 +50,4 @@ const validateUser = (user: User) => {
 
     return schema.validate(user);
 }
-module.exports = { User: UserModel, validateUser }
+export { UserModel, validateUser };
