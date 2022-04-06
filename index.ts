@@ -1,33 +1,34 @@
-import express, { Response, Request } from "express";
-import { MongoHandler } from "./startup/mongo_handler";
-import dotenv from "dotenv";
-import v1Routes from "./startup/v1_routes";
-
-const app = express();
-dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}`, override: true });
-const PORT = process.env.SERVER_PORT || 3000;
+import express from "express";
+import helmet from "helmet";
+import compression from "compression";
+import { loadEnvs } from "./config";
+import { MongoConnect } from "./database/mongo_connect";
+import { handleFailures } from "./startup/failure_handler";
+import { initializeRoutes } from "./startup/route_handler";
 
 (async () => {
-  await MongoHandler.initializeConnection();
+  loadEnvs();
 
-  app.use(express.json());
-  
-  // Just to know if server is running
-  app.get("/", (req: Request, res: Response) => {
-    res.send("Welcome to ideal node architecture ts app");
-  });
+  // initialize mongo connection
+  await MongoConnect.initializeConnection();
 
-  app.use("/api/v1.0", v1Routes());
+  // initialize postgres sequelize connection
+  // await sequelizeInstance.sync();
+  // console.log("Pg Database connection successful");
 
-  // app.use for error handling 
-  // app.use for not found
+  // sequelize relationship examples:
+  // https://github.com/therahulmidha/MaxNodeProjects/blob/76aaeafb8bd05a1d88fcee7a8234fc32d0d472ee/max-node/index.js#L53
+
+  // initialize route handling
+  const app = express();
+  initializeRoutes(app);
 
   // use helmet, compression modules for production env
-  // refer well organized node project
+  if (process.env.NODE_ENV === "production") {
+    app.use(helmet());
+    app.use(compression());
+  }
 
-  // process.unhandledRejection
-
-  app.listen(PORT, () => {
-    console.log(`Server listening at port: ${PORT}`);
-  });
+  // handle unexpected failures
+  handleFailures();
 })();

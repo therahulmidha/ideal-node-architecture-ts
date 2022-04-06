@@ -1,19 +1,25 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { UserService } from "../services/user_service";
-import { validateUser } from "../models/User";
+import { validateUser } from "../models/user";
 import {
   CustomError,
   ForbiddenError,
   NotFoundError,
-} from "../utils/error_handler";
+} from "../utils/response/error_handler";
 import {
   getJoiValiationError,
   validateMongooseObjectId,
-} from "../utils/helpers";
-import { ResponseHandler } from "../utils/response_handler";
+} from "../utils/helpers/validation_helpers";
+import { ResponseHandler } from "../utils/response/response_handler";
+import { UserServicePg } from "../services/user_service_pg";
 const userService = new UserService();
+// const userService = new UserServicePg();
 export class UserController {
-  public getUserById = async (req: Request, res: Response) => {
+  public getUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       // validate the req.params.id
       const validate = validateMongooseObjectId(req.params.id);
@@ -34,11 +40,15 @@ export class UserController {
       }
       return new NotFoundError(res, "User not found").getResponse();
     } catch (error) {
-      throw new Error("Internal Server Error");
+      next(error);
     }
   };
 
-  public getAllUsers = async (req: Request, res: Response) => {
+  public getAllUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       // call service method to perform actual operation
       const users = await userService.getAllUsers();
@@ -53,15 +63,11 @@ export class UserController {
       // In case of unsuccessful operation
       return new CustomError(res, "Unable to retrieve users").getResponse();
     } catch (error) {
-      return new CustomError(
-        res,
-        "Unable to retrieve users",
-        error
-      ).getResponse();
+      next(error);
     }
   };
 
-  public saveUser = async (req: Request, res: Response) => {
+  public saveUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // validate req.body
       const validate = validateUser(req.body);
@@ -85,14 +91,15 @@ export class UserController {
       // In case of unsuccessful operation
       return new CustomError(res, "Unable to create user").getResponse();
     } catch (error) {
-      if (error instanceof CustomError) {
-        return error.getResponse();
-      }
-      return new CustomError(res, "Unable to create user", error).getResponse();
+      next(error);
     }
   };
 
-  public updateUserById = async (req: Request, res: Response) => {
+  public updateUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       // validate req.body
       const validate = validateUser(req.body);
@@ -113,16 +120,17 @@ export class UserController {
       }
 
       // In case of unsuccessful operation
-      return new CustomError(res, "Unable to create user").getResponse();
+      return new CustomError(res, "Unable to update user").getResponse();
     } catch (error) {
-      if (error instanceof CustomError) {
-        return error.getResponse();
-      }
-      return new CustomError(res, "Unable to create user", error).getResponse();
+      next(error);
     }
   };
 
-  public deleteUserById = async (req: Request, res: Response) => {
+  public deleteUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       // call service method to perform actual operation
       // validate the req.params.id
@@ -144,10 +152,7 @@ export class UserController {
       // In case of unsuccessful operation
       return new CustomError(res, "Unable to delete user").getResponse();
     } catch (error) {
-      if (error instanceof CustomError) {
-        return error.getResponse();
-      }
-      return new CustomError(res, "Unable to delete user", error).getResponse();
+      next(error);
     }
   };
 }

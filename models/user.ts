@@ -1,4 +1,4 @@
-import { User } from "../types/User";
+import { User } from "../utils/types/User";
 import mongoose from "mongoose";
 import Joi from 'joi';
 import jwt from 'jsonwebtoken';
